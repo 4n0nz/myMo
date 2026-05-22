@@ -1,0 +1,49 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: mytrackr_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: mytrackr_root_pass
+      MYSQL_DATABASE: mautic
+      MYSQL_USER: mautic
+      MYSQL_PASSWORD: mautic_pass
+    volumes:
+      - mytrackr_db:/var/lib/mysql
+    networks:
+      - mytrackr_net
+
+  mautic:
+    image: mytrackr:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mytrackr_app
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - '8080:80'
+    environment:
+      MAUTIC_DB_HOST: db
+      MAUTIC_DB_PORT: 3306
+      MAUTIC_DB_NAME: mautic
+      MAUTIC_DB_USER: mautic
+      MAUTIC_DB_PASSWORD: mautic_pass
+      MAUTIC_TRUSTED_PROXIES: '["0.0.0.0/0"]'
+      MAUTIC_URL: https://trk.mygoods.ca
+    volumes:
+      - mytrackr_config:/var/www/html/config
+      - mytrackr_logs:/var/www/html/var/logs
+      - mytrackr_media:/var/www/html/docroot/media
+    networks:
+      - mytrackr_net
+
+volumes:
+  mytrackr_db:
+  mytrackr_config:
+  mytrackr_logs:
+  mytrackr_media:
+
+networks:
+  mytrackr_net:
